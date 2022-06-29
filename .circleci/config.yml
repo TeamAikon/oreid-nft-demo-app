@@ -113,7 +113,6 @@ jobs:
     steps:
       # Machine Setup
       - checkout:
-          path: ".."
       - node/install:
           node-version: "16.13.2"
       - run:
