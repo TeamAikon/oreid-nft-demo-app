@@ -42,8 +42,9 @@ jobs:
       - attach_workspace:
           at: ~/API-market
       - node/install:
-          node-version: "16.13.2"
           install-yarn: true
+          node-version: "16.13.2"
+      - run: node --version          
       - jq/install
       # install gcloud and login to it
       - run:
