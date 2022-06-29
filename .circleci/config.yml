@@ -25,7 +25,7 @@ workflows:
                 - dev
 
 orbs:
-  node: circleci/node@5.0.0
+  node: circleci/node@5.0.2
   jq: circleci/jq@2.2.0
 
 jobs:
