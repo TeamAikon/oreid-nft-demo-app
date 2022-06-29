@@ -122,7 +122,7 @@ jobs:
 
       # install npm dependencies
       - node/install-packages:
-          override-ci-command: npm install
+          override-ci-command: yarn install
 
 
       - persist_to_workspace:
