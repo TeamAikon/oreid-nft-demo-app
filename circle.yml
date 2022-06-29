@@ -1,0 +1,132 @@
+# This configuration was automatically generated from a CircleCI 1.0 config.
+# It should include any build commands you had along with commands that CircleCI
+# inferred from your project structure. We strongly recommend you read all the
+# comments in this file to understand the structure of CircleCI 2.0, as the idiom
+# for configuration has changed substantially in 2.0 to allow arbitrary jobs rather
+# than the prescribed lifecycle of 1.0. In general, we recommend using this generated
+# configuration as a reference rather than using it in production, though in most
+# cases it should duplicate the execution of your original 1.0 config.
+version: 2.1
+
+workflows:
+  build_deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          context:
+            - gcloud-<< pipeline.git.branch >>
+          filters:
+            branches:
+              only:
+                - master
+                - staging
+                - dev
+
+orbs:
+  node: circleci/node@5.0.0
+  jq: circleci/jq@2.2.0
+
+jobs:
+  deploy:
+    working_directory: ~/API-market/oreid-nft-demo-app
+    parallelism: 1
+    shell: /bin/bash --login -e
+    environment:
+      GCLOUD_PROJECT: ore-id
+    docker:
+      - image: google/cloud-sdk:363.0.0
+    resource_class: medium+
+    steps:
+      - attach_workspace:
+          at: ~/API-market
+      - node/install:
+          node-version: "16.13.2"
+      - jq/install
+      # install gcloud and login to it
+      - run:
+          working_directory: ~/
+          command: |
+            echo $GCLOUD_SERVICE_ACCT_KEY | base64 --decode > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+            gcloud config set project $GOOGLE_PROJECT_ID
+
+      # copy .env file from circleci injected environmental variables
+      - run:
+          command: |
+            # use new variable to map master -> prod
+            DEPLOY_ENV=$CIRCLE_BRANCH
+            if [ "$CIRCLE_BRANCH" == "master" ]; then
+              DEPLOY_ENV=prod
+            fi
+            
+            # process env_version.json
+            SECRET_VERSION=`cat env_version.json | jq -r ".${DEPLOY_ENV}.version"`
+            ENV_VERSION=`cat env_version.json | jq -r '.envVersion'`
+            # pull this from GCP
+            gcloud secrets versions access ${SECRET_VERSION} \
+              --secret="$SECRET_NAME_OREID_PORTAL" \
+              --format='get(payload.data)' | tr '_-' '/+' | base64 -d > .env
+            echo "Pulled down secret into .env"
+            # disable fail on error to output meaningful message
+            set +e
+            # grep ENV_VERSION is in env. This will fail if the incorrect version is not in the .env file
+            CHECK_ENV=`grep $ENV_VERSION .env`
+            if [ "$?" == "1" ]; then
+              echo ".env SCHEMA does not match: ${ENV_VERSION} not found in version: ${SECRET_VERSION}";
+              exit 1
+            fi
+      # create deploy_version file
+      - run:
+          command: |
+            ENV_HASH=$(sha1sum ./.env | awk '{print $1}') 
+            echo ENV_HASH = "\"$ENV_HASH\"" >> ./deploy-version
+
+            echo BUILD_VERSION = "\"$CIRCLE_BUILD_NUM\"" >> ./deploy-version
+
+            CURRENTDATE=`date +"%A, %b %d, %Y %I:%M %p"`
+            echo DEPLOY_DATE = "\"$CURRENTDATE\"" >> ./deploy-version
+            echo GIT_BRANCH = "\"$CIRCLE_BRANCH\"" >> ./deploy-version
+            echo GIT_COMMIT = "\"$CIRCLE_SHA1\"" >> ./deploy-version
+            
+      # build
+      - run: npm run build
+      # deploy to Google Cloud
+      - run:
+          command: |
+            rm -rf ./node_modules
+            # deploy to AppEngine
+            ./scripts/deploy.sh
+
+  build:
+    working_directory: ~/API-market/oreid-nft-demo-app
+    parallelism: 1
+    shell: /bin/bash --login
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+      PYTHONPATH: ${PYTHONPATH}:${HOME}/google_appengine
+      SERVICE_VERSION: 1
+    docker:
+      - image: cimg/base:stable-18.04
+    steps:
+      # Machine Setup
+      - checkout:
+          path: ".."
+      - node/install:
+          node-version: "16.13.2"
+      - run:
+          working_directory: ~/API-market/oreid-nft-demo-app
+          command: |
+            echo $NPMRC | base64 --decode >> ./.npmrc
+
+      # install npm dependencies
+      - node/install-packages:
+          override-ci-command: npm install
+
+
+      - persist_to_workspace:
+          root: ~/API-market
+          paths:
+            - oreid-nft-demo-app

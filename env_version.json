@@ -1,0 +1,12 @@
+{
+  "envVersion": "2022-06-29_15:05",
+  "dev": {
+    "version": "1"
+  },
+  "staging": {
+    "version": "1"
+  },
+  "prod": {
+    "version": "1"
+  }
+}
