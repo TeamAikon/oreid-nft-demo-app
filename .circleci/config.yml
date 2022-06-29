@@ -116,6 +116,7 @@ jobs:
       # Machine Setup
       - checkout
       - node/install:
+          install-yarn: true
           node-version: "16.13.2"
       - run:
           working_directory: ~/API-market/oreid-nft-demo-app
