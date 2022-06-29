@@ -43,6 +43,7 @@ jobs:
           at: ~/API-market
       - node/install:
           node-version: "16.13.2"
+          install-yarn: true
       - jq/install
       # install gcloud and login to it
       - run:
