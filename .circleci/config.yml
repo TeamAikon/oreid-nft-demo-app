@@ -112,7 +112,7 @@ jobs:
       - image: cimg/base:stable-18.04
     steps:
       # Machine Setup
-      - checkout:
+      - checkout
       - node/install:
           node-version: "16.13.2"
       - run:
