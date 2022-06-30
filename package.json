@@ -1,6 +1,6 @@
 {
   "name": "react-atomichub",
-  "version": "1.0.0",
+  "version": "0.3.6",
   "private": true,
   "engines": {
     "node": "16.x.x"
