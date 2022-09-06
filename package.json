@@ -19,7 +19,7 @@
     "oreid-login-button": "^1.1.2",
     "oreid-profile": "1.1.0",
     "oreid-react": "^2.0.0",
-    "oreid-webpopup": "^2.0.0",
+    "oreid-webpopup": "^2.1.0",
     "path": "^0.12.7",
     "react": "^16.9.0",
     "react-copy-to-clipboard": "^5.1.0",
