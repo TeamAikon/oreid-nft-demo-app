@@ -7,6 +7,7 @@ import { useOreId } from "oreid-react";
 
 export const Header: React.FC = () => {
 	const oreId = useOreId();
+	console.log(oreId.auth.accountName)
 	return (
 		<header className={style.Header}>
 			<div className={style.content}>
@@ -16,7 +17,6 @@ export const Header: React.FC = () => {
 				<div>
 					<OreIdProfileButton
 						align="right"
-						//@ts-ignore
 						oreId={oreId}
 						style={{
 							backgroundColor: "#151F44",
