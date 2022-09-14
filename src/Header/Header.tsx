@@ -7,7 +7,7 @@ import { useOreId } from "oreid-react";
 
 export const Header: React.FC = () => {
 	const oreId = useOreId();
-	console.log(oreId.auth.accountName)
+
 	return (
 		<header className={style.Header}>
 			<div className={style.content}>
